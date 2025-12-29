@@ -1,6 +1,8 @@
 package com.example.ordermanagement.modules.ordering.exception;
 
-public class OrderNotFoundException extends RuntimeException {
+import com.example.ordermanagement.common.exception.ResourceNotFoundException;
+
+public class OrderNotFoundException extends ResourceNotFoundException {
     public OrderNotFoundException(String message) {
         super(message);
     }

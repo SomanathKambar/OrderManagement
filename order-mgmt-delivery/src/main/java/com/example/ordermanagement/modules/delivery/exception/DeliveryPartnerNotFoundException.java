@@ -1,6 +1,8 @@
 package com.example.ordermanagement.modules.delivery.exception;
 
-public class DeliveryPartnerNotFoundException extends RuntimeException {
+import com.example.ordermanagement.common.exception.ResourceNotFoundException;
+
+public class DeliveryPartnerNotFoundException extends ResourceNotFoundException {
     public DeliveryPartnerNotFoundException(String message) {
         super(message);
     }

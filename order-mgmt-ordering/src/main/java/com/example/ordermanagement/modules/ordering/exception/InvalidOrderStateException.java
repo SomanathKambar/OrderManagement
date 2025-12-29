@@ -1,6 +1,8 @@
 package com.example.ordermanagement.modules.ordering.exception;
 
-public class InvalidOrderStateException extends RuntimeException {
+import com.example.ordermanagement.common.exception.InvalidDomainStateException;
+
+public class InvalidOrderStateException extends InvalidDomainStateException {
     public InvalidOrderStateException(String message) {
         super(message);
     }
