@@ -10,8 +10,8 @@ To provide a reliable, retry-safe, and audit-compliant backend for order lifecyc
 ### 🛡️ Core Reliability
 - **Strict State Machine**: Orders follow a directed acyclic graph (DAG) of states. No illegal transitions.
 - **Idempotency**: All mutating APIs (`POST`, `PUT`, `DELETE`) require an `Idempotency-Key` header to ensure exactly-once processing.
-- **Financial Safety**: Refund workflows are transactional and strictly gated (`FAILED` or `CANCELLED` states only).
-- **Concurrency Control**: Optimistic locking and transactional consistency boundaries.
+- **Transactional Outbox Pattern**: Guaranteed "At-Least-Once" event delivery to Kafka. Resolves the Dual-Write problem by persisting events in the same transaction as order changes.
+- **Financial Safety**: Refund workflows are transactional and strictly gated.
 
 ### 🔄 Order Lifecycle
 The system enforces the following lifecycle:
@@ -23,7 +23,10 @@ The system enforces the following lifecycle:
 - `REFUNDED` (compensation terminal state)
 
 ### 📡 Event-Driven Architecture
-Every state transition emits a domain event for downstream consumption (Analytics, Notifications, Loyalty):
+Every state transition emits a domain event. We use the **Transactional Outbox Pattern** to ensure high reliability:
+1. **Domain Change**: Order saved + Event saved to `outbox_events` (Atomic DB transaction).
+2. **Message Relay**: `OutboxMessageRelay` polls pending events and publishes to Kafka.
+3. **Retry Logic**: Automatic retries (max 5) with failure tracking.
 - `OrderInitiatedEvent`
 - `OrderPaidEvent`
 - `OrderConfirmedEvent`
