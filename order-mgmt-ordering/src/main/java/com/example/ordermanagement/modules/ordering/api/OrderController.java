@@ -1,5 +1,6 @@
 package com.example.ordermanagement.modules.ordering.api;
 
+import com.example.ordermanagement.modules.ordering.dto.RefundOrderRequest;
 import com.example.ordermanagement.modules.ordering.dto.AssignOrderRequest;
 import com.example.ordermanagement.modules.ordering.dto.CreateOrderRequest;
 import com.example.ordermanagement.modules.ordering.dto.OrderResponse;
@@ -90,6 +91,20 @@ public class OrderController {
         log.info("Assigning order {} to partner {} with key: {}", id, request.getDeliveryPartnerId(), idempotencyKey);
 
         Order order = orderService.assignOrder(id, request.getDeliveryPartnerId());
+        OrderResponse response = orderMapper.toResponse(order);
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/{id}/refund")
+    @Operation(summary = "Refund an order")
+    public ResponseEntity<OrderResponse> refundOrder(
+            @PathVariable Long id,
+            @Valid @RequestBody RefundOrderRequest request,
+            @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
+
+        log.info("Refunding order {} with key: {}", id, idempotencyKey);
+
+        Order order = orderService.refundOrder(id, request.getReason());
         OrderResponse response = orderMapper.toResponse(order);
         return ResponseEntity.ok(response);
     }

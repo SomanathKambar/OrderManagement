@@ -9,7 +9,19 @@ server:
 
 logging:
   level:
-    com.example.ordermanagement: DEBUG
+    com.example.ordermanagement: INFO
+    org.springframework.web: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
 
 springdoc:
   api-docs:

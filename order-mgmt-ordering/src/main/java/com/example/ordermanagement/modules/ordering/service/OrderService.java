@@ -158,6 +158,18 @@ public class OrderService {
     }
 
     @CacheEvict(value = "orders", key = "#id")
+    public Order refundOrder(Long id, String reason) {
+        Order order = getOrder(id);
+        
+        // Strict check: Refund only allowed for FAILED or CANCELLED
+        if (order.getStatus() != OrderStatus.FAILED && order.getStatus() != OrderStatus.CANCELLED) {
+             throw new InvalidOrderStateException("Refund is allowed only when order is FAILED or CANCELLED. Current status: " + order.getStatus());
+        }
+
+        return updateOrderStatus(id, OrderStatus.REFUNDED, reason);
+    }
+
+    @CacheEvict(value = "orders", key = "#id")
     public Order updateSpecialInstructions(Long id, String instructions) {
         Order order = getOrder(id);
         order.setSpecialInstructions(instructions);
