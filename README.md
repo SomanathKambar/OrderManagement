@@ -113,7 +113,7 @@ Run integration tests:
 ```
 
 ## 🔮 Future Roadmap
-- [ ] **Phase 3**: Kafka Integration for async event processing.
+- [x] **Phase 3**: Kafka Integration for async event processing.
 - [ ] **Phase 4**: Redis caching for read-heavy endpoints.
 - [ ] **Phase 5**: Kubernetes Helm charts.
 
