@@ -27,7 +27,7 @@ public class OrderFactory {
                 .restaurantId(restaurantId)
                 .restaurantName(restaurantName)
                 .orderType(orderType)
-                .status(OrderStatus.CREATED)
+                .status(OrderStatus.INITIATED)
                 .paymentStatus(PaymentStatus.PENDING)
                 .deliveryAddress(deliveryAddress)
                 .restaurantAddress(restaurantAddress)

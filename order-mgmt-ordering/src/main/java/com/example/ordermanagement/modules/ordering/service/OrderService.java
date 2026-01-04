@@ -1,8 +1,10 @@
 package com.example.ordermanagement.modules.ordering.service;
 
 
+import com.example.ordermanagement.common.event.*;
 import com.example.ordermanagement.modules.ordering.domain.OrderStatus;
 import com.example.ordermanagement.modules.ordering.domain.OrderType;
+import com.example.ordermanagement.modules.ordering.domain.event.OrderEventPublisher;
 import com.example.ordermanagement.modules.ordering.domain.factory.OrderFactory;
 import com.example.ordermanagement.common.domain.Address;
 import com.example.ordermanagement.modules.ordering.domain.model.Order;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -30,6 +33,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderFactory orderFactory;
+    private final OrderEventPublisher eventPublisher;
 
     public Order createOrder(String customerId, String customerName,
                              String restaurantId, String restaurantName,
@@ -43,8 +47,19 @@ public class OrderService {
                 items, specialInstructions
         );
 
-        log.info("Creating order: {}", order.getId());
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        log.info("Created order: {}", savedOrder.getId());
+
+        eventPublisher.publish(OrderCreatedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .occurredAt(LocalDateTime.now())
+                .orderId(savedOrder.getId())
+                .customerId(customerId)
+                .restaurantId(restaurantId)
+                .amount(savedOrder.getGrandTotal().doubleValue())
+                .build());
+
+        return savedOrder;
     }
 
     @Cacheable(value = "orders", key = "#id")
@@ -64,6 +79,22 @@ public class OrderService {
             Order updatedOrder = orderRepository.save(order);
 
             log.info("Order {}: {} → {}", id, oldStatus, newStatus);
+
+            if (newStatus == OrderStatus.PAID) {
+                eventPublisher.publish(OrderPaidEvent.builder()
+                        .eventId(UUID.randomUUID().toString())
+                        .occurredAt(LocalDateTime.now())
+                        .orderId(id)
+                        .paymentId("PAY_" + id) // Placeholder
+                        .build());
+            } else if (newStatus == OrderStatus.DELIVERED) {
+                eventPublisher.publish(OrderCompletedEvent.builder()
+                        .eventId(UUID.randomUUID().toString())
+                        .occurredAt(LocalDateTime.now())
+                        .orderId(id)
+                        .build());
+            }
+
             return updatedOrder;
 
         } catch (IllegalStateException e) {
@@ -74,10 +105,35 @@ public class OrderService {
     }
 
     @CacheEvict(value = "orders", key = "#id")
+    public Order assignOrder(Long id, Long deliveryPartnerId) {
+        Order order = getOrder(id);
+        order.assignToDeliveryPartner(deliveryPartnerId);
+        Order updatedOrder = orderRepository.save(order);
+
+        eventPublisher.publish(OrderAssignedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .occurredAt(LocalDateTime.now())
+                .orderId(id)
+                .deliveryPartnerId(deliveryPartnerId)
+                .build());
+
+        return updatedOrder;
+    }
+
+    @CacheEvict(value = "orders", key = "#id")
     public Order cancelOrder(Long id, String reason) {
         Order order = getOrder(id);
         order.cancel(reason);
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        eventPublisher.publish(OrderCancelledEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .occurredAt(LocalDateTime.now())
+                .orderId(id)
+                .reason(reason)
+                .build());
+
+        return savedOrder;
     }
 
     @CacheEvict(value = "orders", key = "#id")
@@ -114,7 +170,7 @@ public class OrderService {
     public List<Order> getActiveOrdersByRestaurant(String restaurantId) {
         return orderRepository.findByRestaurantIdAndStatusIn(
                 restaurantId,
-                List.of(OrderStatus.CREATED, OrderStatus.ASSIGNED, OrderStatus.PICKED)
+                List.of(OrderStatus.INITIATED, OrderStatus.PENDING_PAYMENT, OrderStatus.PAID, OrderStatus.CONFIRMED, OrderStatus.PREPARING)
         );
     }
 

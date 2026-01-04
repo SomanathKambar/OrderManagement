@@ -1,5 +1,16 @@
 package com.example.ordermanagement.modules.ordering.domain;
 
 public enum OrderStatus {
-    CREATED, ASSIGNED, PICKED, ON_THE_WAY, DELIVERED, CANCELLED, FAILED
+    INITIATED,
+    PENDING_PAYMENT,
+    PAID,
+    CONFIRMED,
+    PREPARING,
+    READY_FOR_PICKUP,
+    PICKED_UP,
+    IN_TRANSIT,
+    DELIVERED,
+    CANCELLED,
+    FAILED,
+    REFUNDED
 }

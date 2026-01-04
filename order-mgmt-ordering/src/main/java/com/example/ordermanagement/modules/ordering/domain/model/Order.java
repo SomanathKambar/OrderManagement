@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -44,7 +45,7 @@ public class Order {
     private Integer estimatedDeliveryMinutes;
     private Integer actualDeliveryMinutes;
 
-    private String specialInstructions; // Added field
+    private String specialInstructions;
     private String cancellationReason;
 
     private LocalDateTime createdAt;
@@ -54,12 +55,15 @@ public class Order {
     private LocalDateTime deliveredAt;
     private LocalDateTime cancelledAt;
 
+    @Deprecated
     public boolean canBeCancelled() {
-        return status == OrderStatus.CREATED || status == OrderStatus.ASSIGNED;
+        return Set.of(OrderStatus.INITIATED, OrderStatus.PENDING_PAYMENT, OrderStatus.PAID, OrderStatus.CONFIRMED, OrderStatus.PREPARING)
+                .contains(status);
     }
 
+    @Deprecated
     public boolean canBeAssigned() {
-        return status == OrderStatus.CREATED;
+        return status == OrderStatus.CONFIRMED || status == OrderStatus.PREPARING;
     }
 
     public void calculateGrandTotal() {
@@ -74,21 +78,25 @@ public class Order {
     }
 
     public void assignToDeliveryPartner(Long partnerId) {
-        if (!canBeAssigned()) {
+        // Assignment usually happens after confirmation/during prep
+        if (status != OrderStatus.CONFIRMED && status != OrderStatus.PREPARING) {
             throw new IllegalStateException("Order cannot be assigned in current state: " + status);
         }
         this.deliveryPartnerId = partnerId;
-        this.status = OrderStatus.ASSIGNED;
         this.assignedAt = LocalDateTime.now();
+        // Note: We don't change state to ASSIGNED as it's not in the new lifecycle
     }
 
     public void updateStatus(OrderStatus newStatus) {
+        if (this.status == newStatus) {
+            return;
+        }
         validateStatusTransition(newStatus);
         this.status = newStatus;
         this.updatedAt = LocalDateTime.now();
 
         switch (newStatus) {
-            case PICKED:
+            case PICKED_UP:
                 this.pickedAt = LocalDateTime.now();
                 break;
             case DELIVERED:
@@ -101,21 +109,51 @@ public class Order {
     }
 
     public void cancel(String reason) {
-        if (!canBeCancelled()) {
-            throw new IllegalStateException("Order cannot be cancelled in current state: " + status);
-        }
-        this.status = OrderStatus.CANCELLED;
+        updateStatus(OrderStatus.CANCELLED);
         this.cancellationReason = reason;
-        this.cancelledAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     private void validateStatusTransition(OrderStatus newStatus) {
-        if (this.status == OrderStatus.CANCELLED && newStatus != OrderStatus.CANCELLED) {
-            throw new IllegalStateException("Cannot transition from CANCELLED to " + newStatus);
+        boolean isValid = false;
+        switch (this.status) {
+            case INITIATED:
+                isValid = (newStatus == OrderStatus.PENDING_PAYMENT);
+                break;
+            case PENDING_PAYMENT:
+                isValid = Set.of(OrderStatus.PAID, OrderStatus.FAILED, OrderStatus.CANCELLED).contains(newStatus);
+                break;
+            case PAID:
+                isValid = Set.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED).contains(newStatus);
+                break;
+            case CONFIRMED:
+                isValid = Set.of(OrderStatus.PREPARING, OrderStatus.CANCELLED).contains(newStatus);
+                break;
+            case PREPARING:
+                isValid = (newStatus == OrderStatus.READY_FOR_PICKUP);
+                break;
+            case READY_FOR_PICKUP:
+                isValid = (newStatus == OrderStatus.PICKED_UP);
+                break;
+            case PICKED_UP:
+                isValid = (newStatus == OrderStatus.IN_TRANSIT);
+                break;
+            case IN_TRANSIT:
+                isValid = Set.of(OrderStatus.DELIVERED, OrderStatus.FAILED).contains(newStatus);
+                break;
+            case FAILED:
+                isValid = (newStatus == OrderStatus.REFUNDED);
+                break;
+            case CANCELLED:
+                isValid = (newStatus == OrderStatus.REFUNDED);
+                break;
+            case DELIVERED:
+            case REFUNDED:
+                isValid = false; // Terminal states
+                break;
         }
-        if (this.status == OrderStatus.DELIVERED && newStatus != OrderStatus.DELIVERED) {
-            throw new IllegalStateException("Cannot transition from DELIVERED to " + newStatus);
+
+        if (!isValid) {
+            throw new IllegalStateException("Invalid transition from " + this.status + " to " + newStatus);
         }
     }
 }

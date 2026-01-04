@@ -38,11 +38,6 @@ public class OrderController {
 
         log.info("Creating order for customer: {}", request.getCustomerId());
 
-        // TODO: Implement idempotency check
-        // if (idempotencyKey != null && orderService.isDuplicateRequest(idempotencyKey)) {
-        //     return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        // }
-
         Order order = orderService.createOrder(
                 request.getCustomerId(),
                 request.getCustomerName(),

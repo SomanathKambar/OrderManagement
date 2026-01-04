@@ -57,11 +57,10 @@ public class DeliveryPartnerService {
                             partner.getAssignedOrderCount());
         }
 
-        order.assignToDeliveryPartner(partner.getId());
         partner.assignOrder();
 
         deliveryPartnerRepository.save(partner);
-        orderService.updateOrderStatus(orderId, OrderStatus.ASSIGNED);
+        orderService.assignOrder(orderId, partnerId);
 
         log.info("Successfully assigned partner {} to order {}", partnerId, orderId);
         return partner;

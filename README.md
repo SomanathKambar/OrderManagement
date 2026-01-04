@@ -16,49 +16,79 @@ A Modular Monolith application for managing orders and delivery partners, built 
 ## Features
 
 -   **Order Creation**: Create new orders with details like customer information, order items, and delivery address.
--   **Order Status Management**: Update the status of orders (e.g., PENDING, PROCESSING, DELIVERED, CANCELLED).
+-   **Order Status Management**: Full state machine implementation: `INITIATED` → `PENDING_PAYMENT` → `PAID` → `CONFIRMED` → `PREPARING` → `READY_FOR_PICKUP` → `PICKED_UP` → `IN_TRANSIT` → `DELIVERED`.
+-   **Idempotency**: Safe retry mechanisms using `Idempotency-Key` header.
 -   **Delivery Partner Management**: Register and manage delivery partners, including their availability status.
--   **Order Assignment**: Assign orders to available delivery partners using pluggable strategies (e.g., City-Based, Nearest-First).
+-   **Order Assignment**: Assign orders to available delivery partners.
 -   **Domain-Driven Design**: Clear separation between domain models, entities, DTOs, and services.
--   **RESTful API**: Exposes a comprehensive set of REST endpoints for all core functionalities.
--   **In-memory Database**: Uses H2 database for easy setup and development.
+-   **RESTful API**: Exposes a comprehensive set of REST endpoints.
+-   **Production Ready**: Docker support, Database Migrations (Flyway), and Environment Profiles.
 
 ## Tech Stack
 
 -   **Java**: Version 17
--   **Spring Boot**: Version 3.2.0
+-   **Spring Boot**: Version 3.4.0
 -   **Maven**: Build automation tool
--   **Spring Data JPA**: For data persistence and repository abstraction.
--   **Hibernate**: JPA implementation.
--   **H2 Database**: In-memory database for development and testing.
--   **Lombok**: To reduce boilerplate code (e.g., getters, setters, constructors).
--   **JUnit 5 & Mockito**: For unit and integration testing.
+-   **Spring Data JPA**: For data persistence.
+-   **Flyway**: Database migrations.
+-   **PostgreSQL**: Production database.
+-   **H2 Database**: Dev database.
+-   **Lombok**: Boilerplate reduction.
 
 ## Architecture
 
-This system follows a **Modular Monolith** architecture, separating concerns by domain (`ordering`, `delivery`, `identity`) while keeping deployment simple.
+```mermaid
+graph TD
+    Client[Client App] -->|REST / JSON| Gateway[API Gateway / Load Balancer]
+    Gateway -->|HTTP| App[Order Management Service]
+    
+    subgraph "Order Management Service"
+        API[API Layer (Controllers)]
+        Domain[Domain Layer (Services, Models)]
+        Infra[Infrastructure Layer (Repositories, Events)]
+        
+        API --> Domain
+        Domain --> Infra
+    end
+    
+    Infra -->|JPA| DB[(PostgreSQL)]
+    Infra -->|Events| Broker{Event Broker (Future)}
+```
 
-- **Modules**:
-  - `modules.ordering`: Handles order lifecycle (Create, Update, Cancel).
-  - `modules.delivery`: Manages delivery partners and assignments.
-  - `common`: Shared domain objects and exceptions.
-- **Data Isolation**: Each module uses its own database schema (logically).
-- **Communication**: Sync for queries, Async events for side effects (planned).
+## Idempotency
+
+The API supports idempotency for safe retries.
+- **Header**: `Idempotency-Key: <unique-uuid>`
+- **Behavior**: If a request is repeated with the same key, the server returns the cached response without re-processing.
+
+## Docker Build & Run
+
+### 1. Build the Docker Image
+```bash
+docker build -t ordermanagement .
+```
+
+### 2. Run with Docker Compose
+To run the full stack (App + Postgres + Redis + MailHog):
+*First, update docker-compose.yml to include the app service or run separately.*
+
+**Run App Standalone (connecting to local DB or H2):**
+```bash
+docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev ordermanagement
+```
 
 ## Prerequisites
 
-- Java 17 or 21
-- Docker (optional, for Postgres/Redis)
-- Maven (wrapper included)
+- Java 17
+- Docker (optional)
+- Maven
 
 ## Getting Started
 
-1. **Start Infrastructure (Optional)**
-   If you have Docker, start the database and tools:
+1. **Start Infrastructure**
    ```bash
    docker compose up -d
    ```
-   *If you don't have Docker, the application will fallback to H2 (In-Memory Database) automatically.*
 
 2. **Run the Application**
    ```bash
@@ -67,10 +97,38 @@ This system follows a **Modular Monolith** architecture, separating concerns by 
 
 3. **Access the Application**
    - API Base URL: `http://localhost:8080`
-   - H2 Console: `http://localhost:8080/h2-console`
    - Swagger UI: `http://localhost:8080/swagger-ui.html`
 
 ## API Documentation
+
+### Order Lifecycle Sequence
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant OrderService
+    participant DB
+    participant Payment
+    participant Delivery
+
+    User->>API: POST /orders (Create)
+    API->>OrderService: createOrder()
+    OrderService->>DB: Save (INITIATED)
+    OrderService-->>API: Order Created
+    API-->>User: 201 Created
+
+    User->>API: PUT /orders/{id}/payment (Pay)
+    API->>OrderService: updateStatus(PAID)
+    OrderService->>DB: Update Status
+    OrderService->>OrderService: Publish OrderPaidEvent
+    OrderService-->>API: Updated
+    API-->>User: 200 OK
+
+    Note over OrderService, Delivery: Background process or Admin
+    OrderService->>OrderService: Assign Driver
+    OrderService->>Delivery: Notify Driver
+```
 
 ### Orders API
 
@@ -78,6 +136,7 @@ This system follows a **Modular Monolith** architecture, separating concerns by 
 
 #### 1. Create a New Order
 *   **Method**: `POST /api/v1/orders`
+*   **Headers**: `Idempotency-Key: <uuid>`
 *   **Body**:
     ```json
     {
@@ -86,29 +145,9 @@ This system follows a **Modular Monolith** architecture, separating concerns by 
       "restaurantId": "rest_456",
       "restaurantName": "Burger King",
       "orderType": "FOOD",
-      "deliveryAddress": {
-        "streetAddress": "123 Main St",
-        "city": "New York",
-        "state": "NY",
-        "postalCode": "10001",
-        "country": "USA"
-      },
-      "restaurantAddress": {
-        "streetAddress": "456 Market St",
-        "city": "New York",
-        "state": "NY",
-        "postalCode": "10002",
-        "country": "USA"
-      },
-      "items": [
-        {
-          "itemId": "item_1",
-          "itemName": "Burger",
-          "quantity": 2,
-          "unitPrice": 5.99
-        }
-      ],
-      "specialInstructions": "Ring doorbell"
+      "deliveryAddress": { ... },
+      "restaurantAddress": { ... },
+      "items": [ ... ]
     }
     ```
 *   **Response**: `201 Created` with `OrderResponse`
