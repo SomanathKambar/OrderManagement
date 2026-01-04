@@ -17,10 +17,10 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Request to update order status")
 public class UpdateOrderStatusRequest {
     
-    @NotNull(message = "Status is required")
-    @Schema(description = "New order status", example = "ASSIGNED")
-    private OrderStatus status;
+    @NotNull(message = "Target state is required")
+    @Schema(description = "Target state for transition", example = "PREPARING")
+    private OrderStatus targetState;
     
-    @Schema(description = "Additional notes for status update", example = "Assigned to delivery partner")
-    private String notes;
+    @Schema(description = "Reason for state transition", example = "Restaurant accepted order")
+    private String reason;
 }

@@ -1,5 +1,6 @@
 package com.example.ordermanagement.modules.ordering.api;
 
+import com.example.ordermanagement.modules.ordering.dto.AssignOrderRequest;
 import com.example.ordermanagement.modules.ordering.dto.CreateOrderRequest;
 import com.example.ordermanagement.modules.ordering.dto.OrderResponse;
 import com.example.ordermanagement.modules.ordering.dto.UpdateOrderStatusRequest;
@@ -34,9 +35,9 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<OrderResponse> createOrder(
             @Valid @RequestBody CreateOrderRequest request,
-            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+            @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
 
-        log.info("Creating order for customer: {}", request.getCustomerId());
+        log.info("Creating order for customer: {} with key: {}", request.getCustomerId(), idempotencyKey);
 
         Order order = orderService.createOrder(
                 request.getCustomerId(),
@@ -69,9 +70,26 @@ public class OrderController {
     @Operation(summary = "Update order status")
     public ResponseEntity<OrderResponse> updateOrderStatus(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateOrderStatusRequest request) {
+            @Valid @RequestBody UpdateOrderStatusRequest request,
+            @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
+            
+        log.info("Updating order {} status to {} with key: {}", id, request.getTargetState(), idempotencyKey);
 
-        Order order = orderService.updateOrderStatus(id, request.getStatus());
+        Order order = orderService.updateOrderStatus(id, request.getTargetState(), request.getReason());
+        OrderResponse response = orderMapper.toResponse(order);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/assign")
+    @Operation(summary = "Assign order to delivery partner")
+    public ResponseEntity<OrderResponse> assignOrder(
+            @PathVariable Long id,
+            @Valid @RequestBody AssignOrderRequest request,
+            @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
+
+        log.info("Assigning order {} to partner {} with key: {}", id, request.getDeliveryPartnerId(), idempotencyKey);
+
+        Order order = orderService.assignOrder(id, request.getDeliveryPartnerId());
         OrderResponse response = orderMapper.toResponse(order);
         return ResponseEntity.ok(response);
     }
@@ -80,7 +98,10 @@ public class OrderController {
     @Operation(summary = "Cancel order")
     public ResponseEntity<OrderResponse> cancelOrder(
             @PathVariable Long id,
-            @RequestParam(required = false) String reason) {
+            @RequestParam(required = false) String reason,
+            @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
+            
+        log.info("Cancelling order {} with key: {}", id, idempotencyKey);
 
         Order order = orderService.cancelOrder(id, reason != null ? reason : "Customer request");
         OrderResponse response = orderMapper.toResponse(order);

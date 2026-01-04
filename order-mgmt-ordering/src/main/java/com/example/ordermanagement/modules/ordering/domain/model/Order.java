@@ -78,13 +78,12 @@ public class Order {
     }
 
     public void assignToDeliveryPartner(Long partnerId) {
-        // Assignment usually happens after confirmation/during prep
-        if (status != OrderStatus.CONFIRMED && status != OrderStatus.PREPARING) {
-            throw new IllegalStateException("Order cannot be assigned in current state: " + status);
+        // Assignment only allowed when order is ready for pickup
+        if (status != OrderStatus.READY_FOR_PICKUP) {
+            throw new IllegalStateException("Order cannot be assigned in current state: " + status + ". Must be READY_FOR_PICKUP.");
         }
         this.deliveryPartnerId = partnerId;
         this.assignedAt = LocalDateTime.now();
-        // Note: We don't change state to ASSIGNED as it's not in the new lifecycle
     }
 
     public void updateStatus(OrderStatus newStatus) {
