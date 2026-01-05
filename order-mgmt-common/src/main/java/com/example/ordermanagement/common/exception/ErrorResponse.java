@@ -31,6 +31,9 @@ public class ErrorResponse {
     
     @Schema(description = "Error message", example = "Request validation failed")
     private String message;
+
+    @Schema(description = "Machine-readable reason code for AI agents", example = "ERR_STATE_TRANSITION_INVALID")
+    private String reasonCode;
     
     @Schema(description = "Detailed error information")
     private Map<String, String> details;

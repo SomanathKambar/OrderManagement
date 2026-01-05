@@ -25,6 +25,14 @@ public class OpenApiConfig {
     }
 
     @Bean
+    public GroupedOpenApi fullApi() {
+        return GroupedOpenApi.builder()
+                .group("all")
+                .pathsToMatch("/api/**")
+                .build();
+    }
+
+    @Bean
     public GroupedOpenApi ordersApi() {
         return GroupedOpenApi.builder()
                 .group("orders")
@@ -36,7 +44,7 @@ public class OpenApiConfig {
     public GroupedOpenApi logisticsApi() {
         return GroupedOpenApi.builder()
                 .group("logistics")
-                .pathsToMatch("/api/v1/delivery/**", "/api/v1/partners/**")
+                .pathsToMatch("/api/v1/delivery-partners/**")
                 .build();
     }
     

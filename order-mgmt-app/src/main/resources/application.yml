@@ -7,7 +7,7 @@ spring:
   profiles:
     active: dev
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -24,6 +24,9 @@ logging:
   level:
     com.example.ordermanagement: INFO
     org.springframework.web: INFO
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    org.hibernate.orm.jdbc.bind: ERROR
 
 management:
   endpoints:
@@ -41,3 +44,8 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+  default-group-name: all
+  packages-to-scan: com.example.ordermanagement
+  paths-to-match: /api/**

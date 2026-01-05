@@ -35,6 +35,7 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.BAD_REQUEST.value())
             .error("Validation Failed")
             .message("Request validation failed")
+            .reasonCode("ERR_VALIDATION_FAILED")
             .details(errors)
             .build();
         
@@ -49,6 +50,7 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.NOT_FOUND.value())
             .error("Resource Not Found")
             .message(ex.getMessage())
+            .reasonCode("ERR_RESOURCE_NOT_FOUND")
             .build();
         
         log.warn("Resource not found: {}", ex.getMessage());
@@ -62,6 +64,7 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.CONFLICT.value())
             .error("Invalid Domain State")
             .message(ex.getMessage())
+            .reasonCode("ERR_DOMAIN_STATE_INVALID")
             .build();
         
         log.warn("Invalid domain state: {}", ex.getMessage());
