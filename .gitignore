@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*.npm-cache
+.nx
+node_modules
