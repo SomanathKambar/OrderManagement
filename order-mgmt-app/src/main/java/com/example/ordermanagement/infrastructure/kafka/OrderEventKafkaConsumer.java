@@ -12,6 +12,6 @@ public class OrderEventKafkaConsumer {
     @KafkaListener(topics = "orders.events", groupId = "order-management-group")
     public void consume(OrderEvent event) {
         log.info("Received Kafka Event: Type={}, ID={}, OrderID={}", 
-                event.getClass().getSimpleName(), event.getEventId(), event.getOrderId());
+                event.getClass().getSimpleName(), event.eventId(), event.orderId());
     }
 }

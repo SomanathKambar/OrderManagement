@@ -38,18 +38,18 @@ public class OrderController {
             @Valid @RequestBody CreateOrderRequest request,
             @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
 
-        log.info("Creating order for customer: {} with key: {}", request.getCustomerId(), idempotencyKey);
+        log.info("Creating order for customer: {} with key: {}", request.customerId(), idempotencyKey);
 
         Order order = orderService.createOrder(
-                request.getCustomerId(),
-                request.getCustomerName(),
-                request.getRestaurantId(),
-                request.getRestaurantName(),
-                request.getOrderType().name(),
-                request.getDeliveryAddress(),
-                request.getRestaurantAddress(),
-                request.getItems(),
-                request.getSpecialInstructions()
+                request.customerId(),
+                request.customerName(),
+                request.restaurantId(),
+                request.restaurantName(),
+                request.orderType().name(),
+                request.deliveryAddress(),
+                request.restaurantAddress(),
+                request.items(),
+                request.specialInstructions()
         );
 
         OrderResponse response = orderMapper.toResponse(order);

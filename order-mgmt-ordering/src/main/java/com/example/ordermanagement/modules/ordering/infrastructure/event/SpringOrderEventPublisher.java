@@ -29,7 +29,7 @@ public class SpringOrderEventPublisher implements OrderEventPublisher {
             
             OutboxEvent outboxEvent = OutboxEvent.builder()
                     .aggregateType("ORDER")
-                    .aggregateId(event.getOrderId() != null ? event.getOrderId().toString() : "UNKNOWN")
+                    .aggregateId(event.orderId() != null ? event.orderId().toString() : "UNKNOWN")
                     .eventType(event.getClass().getSimpleName())
                     .topic("orders.events")
                     .payload(payload)
