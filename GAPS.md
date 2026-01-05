@@ -26,9 +26,8 @@ This document tracks the alignment of the **OrderManagement** project with the "
 - [x] Implement Contract Testing between modules (Delivery -> Ordering verified).
 - [x] Add "Dry Run" mode to state-changing APIs.
 
-### Phase 3: Agentic Interfaces (The "Autonomous" Vibe) - 🟢 NEXT
-
-### Phase 3: Agentic Interfaces (The "Autonomous" Vibe)
-- [ ] Create `oms-cli` for agent-triggered maintenance.
+### Phase 3: Agentic Interfaces (The "Autonomous" Vibe) - 🟢 IN PROGRESS
+- [x] Create `oms-cli` for agent-triggered maintenance.
 - [ ] Upgrade to Java 21 (Virtual Threads & Record Patterns) to simplify code logic.
 - [ ] Automated LLM-migration validation scripts.
+
