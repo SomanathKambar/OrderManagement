@@ -28,6 +28,7 @@ This document tracks the alignment of the **OrderManagement** project with the "
 
 ### Phase 3: Agentic Interfaces (The "Autonomous" Vibe) - 🟢 IN PROGRESS
 - [x] Create `oms-cli` for agent-triggered maintenance.
-- [ ] Upgrade to Java 21 (Virtual Threads & Record Patterns) to simplify code logic.
+- [x] Simplify domain models (Events & DTOs) using Java 17 Records & Sealed Classes.
+- [ ] Upgrade to Java 21 (Virtual Threads) if high concurrency is required.
 - [ ] Automated LLM-migration validation scripts.
 

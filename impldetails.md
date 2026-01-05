@@ -14,10 +14,13 @@
     - Implemented `OrderTest.java` to verify state machine integrity.
     - Added `spring-boot-starter-test` to the `ordering` and `delivery` module poms.
     - Implemented `DeliveryOrderContractTest.java` to enforce cross-module integration safety.
-- **Phase 3 Agentic Interfaces**:
+- **Phase 3 Agentic Interfaces & Simplification**:
     - Implemented `cli/oms.py` (Python) for agent-friendly interactions.
-    - Added `MaintenanceController` to Ordering module for API-driven DB resets.
-    - CLI supports: `health`, `reset`, `get`, `validate` (Dry Run).
+    - Added `MaintenanceController` for API-driven DB resets.
+    - **Domain Simplification (Java 17)**:
+        - Converted `OrderEvent` to a sealed interface.
+        - Converted all Order events and DTOs (`OrderResponse`, `CreateOrderRequest`) to Java 17 `records`.
+        - Modernized `OrderService` with switch expressions.
 
 ## 3. API Enhancements
 - **OpenAPI/Swagger**: Updated `OpenApiConfig` to properly group APIs and fixed path mapping for delivery partners.

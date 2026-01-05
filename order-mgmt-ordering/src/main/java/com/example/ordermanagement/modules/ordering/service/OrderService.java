@@ -92,30 +92,23 @@ public class OrderService {
             String eventId = UUID.randomUUID().toString();
             LocalDateTime now = LocalDateTime.now();
 
-            switch (newStatus) {
-                case PENDING_PAYMENT -> eventPublisher.publish(OrderInitiatedEvent.builder()
-                        .eventId(eventId).occurredAt(now).orderId(id).build());
-                case PAID -> eventPublisher.publish(OrderPaidEvent.builder()
-                        .eventId(eventId).occurredAt(now).orderId(id).paymentId("PAY_" + id).build());
-                case CONFIRMED -> eventPublisher.publish(OrderConfirmedEvent.builder()
-                        .eventId(eventId).occurredAt(now).orderId(id).build());
-                case PREPARING -> eventPublisher.publish(OrderPreparingEvent.builder()
-                        .eventId(eventId).occurredAt(now).orderId(id).build());
-                case READY_FOR_PICKUP -> eventPublisher.publish(OrderReadyEvent.builder() // Assuming OrderReadyEvent maps to READY_FOR_PICKUP
-                        .eventId(eventId).occurredAt(now).orderId(id).build());
-                case PICKED_UP -> eventPublisher.publish(OrderPickedUpEvent.builder()
-                        .eventId(eventId).occurredAt(now).orderId(id).build());
-                case IN_TRANSIT -> eventPublisher.publish(OrderInTransitEvent.builder() // Assuming OrderInTransitEvent exists
-                        .eventId(eventId).occurredAt(now).orderId(id).build());
-                case DELIVERED -> eventPublisher.publish(OrderCompletedEvent.builder() // Mapped to OrderDeliveredEvent in vision, but OrderCompletedEvent exists
-                        .eventId(eventId).occurredAt(now).orderId(id).build());
-                case FAILED -> eventPublisher.publish(OrderFailedEvent.builder() // Assuming OrderFailedEvent exists
-                        .eventId(eventId).occurredAt(now).orderId(id).reason(reason).build());
-                case CANCELLED -> eventPublisher.publish(OrderCancelledEvent.builder()
-                        .eventId(eventId).occurredAt(now).orderId(id).reason(reason).build());
-                case REFUNDED -> eventPublisher.publish(OrderRefundedEvent.builder() // Assuming OrderRefundedEvent exists
-                         .eventId(eventId).occurredAt(now).orderId(id).amount(updatedOrder.getGrandTotal().doubleValue()).build());
-                default -> log.warn("No event mapped for status: {}", newStatus);
+            OrderEvent event = switch (newStatus) {
+                case PENDING_PAYMENT -> OrderInitiatedEvent.builder().eventId(eventId).occurredAt(now).orderId(id).build();
+                case PAID -> OrderPaidEvent.builder().eventId(eventId).occurredAt(now).orderId(id).paymentId("PAY_" + id).build();
+                case CONFIRMED -> OrderConfirmedEvent.builder().eventId(eventId).occurredAt(now).orderId(id).build();
+                case PREPARING -> OrderPreparingEvent.builder().eventId(eventId).occurredAt(now).orderId(id).build();
+                case READY_FOR_PICKUP -> OrderReadyEvent.builder().eventId(eventId).occurredAt(now).orderId(id).build();
+                case PICKED_UP -> OrderPickedUpEvent.builder().eventId(eventId).occurredAt(now).orderId(id).build();
+                case IN_TRANSIT -> OrderInTransitEvent.builder().eventId(eventId).occurredAt(now).orderId(id).build();
+                case DELIVERED -> OrderCompletedEvent.builder().eventId(eventId).occurredAt(now).orderId(id).build();
+                case FAILED -> OrderFailedEvent.builder().eventId(eventId).occurredAt(now).orderId(id).reason(reason).build();
+                case CANCELLED -> OrderCancelledEvent.builder().eventId(eventId).occurredAt(now).orderId(id).reason(reason).build();
+                case REFUNDED -> OrderRefundedEvent.builder().eventId(eventId).occurredAt(now).orderId(id).amount(updatedOrder.getGrandTotal().doubleValue()).build();
+                default -> null;
+            };
+
+            if (event != null) {
+                eventPublisher.publish(event);
             }
 
             return updatedOrder;

@@ -2,17 +2,8 @@ package com.example.ordermanagement.common.event;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
-
 import java.time.LocalDateTime;
 
-@Data
-@SuperBuilder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
@@ -33,8 +24,13 @@ import java.time.LocalDateTime;
         @JsonSubTypes.Type(value = OrderRefundedEvent.class, name = "OrderRefundedEvent"),
         @JsonSubTypes.Type(value = OrderAssignedEvent.class, name = "OrderAssignedEvent")
 })
-public abstract class OrderEvent {
-    private String eventId;
-    private LocalDateTime occurredAt;
-    private Long orderId;
+public sealed interface OrderEvent 
+    permits OrderCreatedEvent, OrderInitiatedEvent, OrderPaidEvent, OrderConfirmedEvent, 
+            OrderPreparingEvent, OrderReadyEvent, OrderPickedUpEvent, OrderInTransitEvent, 
+            OrderCompletedEvent, OrderCancelledEvent, OrderFailedEvent, OrderRefundedEvent, 
+            OrderAssignedEvent {
+    
+    String eventId();
+    LocalDateTime occurredAt();
+    Long orderId();
 }
