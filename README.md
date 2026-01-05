@@ -95,6 +95,23 @@ graph TD
 
 ## 📖 API Documentation
 
+### Idempotency
+- Header: Idempotency-Key (required for POST/PUT/DELETE that mutate state)
+- Scope: per endpoint and authenticated principal
+- Format: UUID v4 recommended; max 128 chars
+- Behavior:
+  - First request processes; response cached with status and body
+  - Subsequent identical key within retention returns cached response
+- Retention: configurable TTL (default 24h); scheduled cleanup job
+- Error cases:
+  - Missing header on mutating endpoints: 400 ERR_IDEMPOTENCY_REQUIRED
+  - Key reuse with conflicting payload: 409 ERR_IDEMPOTENCY_MISMATCH
+- Response headers:
+  - Idempotency-Key: echoed
+  - Idempotency-Status: new|replayed
+- Security: keys are opaque, stored hashed; never log raw keys
+
+
 ### 1. Order Management (`/api/v1/orders`)
 
 | Method | Endpoint | Description | Idempotency Required |
