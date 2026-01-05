@@ -13,7 +13,10 @@
 - **Phase 2 Safety (Domain & Contract Testing)**:
     - Implemented `OrderTest.java` to verify state machine integrity.
     - Added `spring-boot-starter-test` to the `ordering` and `delivery` module poms.
-    - Implemented `DeliveryOrderContractTest.java` to enforce cross-module integration safety between Ordering and Delivery modules.
+    - Implemented `DeliveryOrderContractTest.java` to enforce cross-module integration safety.
+- **Phase 2 Safety (Dry Run Mode)**:
+    - Added `X-Dry-Run` header to Ordering APIs.
+    - Updated `OrderService` to support non-persisting validation of state transitions.
 
 ## 3. API Enhancements
 - **OpenAPI/Swagger**: Updated `OpenApiConfig` to properly group APIs and fixed path mapping for delivery partners.

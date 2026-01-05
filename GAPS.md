@@ -21,10 +21,12 @@ This document tracks the alignment of the **OrderManagement** project with the "
 - [x] Implement Structured Logging with Reason Codes.
 - [ ] Generate a consolidated `CONTEXT.md` for LLM context injection.
 
-### Phase 2: Safety & Feedback Loops (The "Safe" Vibe) - 🟢 IN PROGRESS
+### Phase 2: Safety & Feedback Loops (The "Safe" Vibe) - ✅ COMPLETED
 - [x] Target 90%+ Unit Test coverage for Domain Models (Order state machine verified).
 - [x] Implement Contract Testing between modules (Delivery -> Ordering verified).
-- [ ] Add "Dry Run" mode to state-changing APIs.
+- [x] Add "Dry Run" mode to state-changing APIs.
+
+### Phase 3: Agentic Interfaces (The "Autonomous" Vibe) - 🟢 NEXT
 
 ### Phase 3: Agentic Interfaces (The "Autonomous" Vibe)
 - [ ] Create `oms-cli` for agent-triggered maintenance.

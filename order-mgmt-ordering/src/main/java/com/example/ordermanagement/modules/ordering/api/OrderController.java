@@ -72,11 +72,12 @@ public class OrderController {
     public ResponseEntity<OrderResponse> updateOrderStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateOrderStatusRequest request,
-            @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
+            @RequestHeader(value = "Idempotency-Key") String idempotencyKey,
+            @RequestHeader(value = "X-Dry-Run", defaultValue = "false") boolean dryRun) {
             
-        log.info("Updating order {} status to {} with key: {}", id, request.getTargetState(), idempotencyKey);
+        log.info("Updating order {} status to {} with key: {} (Dry Run: {})", id, request.getTargetState(), idempotencyKey, dryRun);
 
-        Order order = orderService.updateOrderStatus(id, request.getTargetState(), request.getReason());
+        Order order = orderService.updateOrderStatus(id, request.getTargetState(), request.getReason(), dryRun);
         OrderResponse response = orderMapper.toResponse(order);
         return ResponseEntity.ok(response);
     }
@@ -100,11 +101,12 @@ public class OrderController {
     public ResponseEntity<OrderResponse> refundOrder(
             @PathVariable Long id,
             @Valid @RequestBody RefundOrderRequest request,
-            @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
+            @RequestHeader(value = "Idempotency-Key") String idempotencyKey,
+            @RequestHeader(value = "X-Dry-Run", defaultValue = "false") boolean dryRun) {
 
-        log.info("Refunding order {} with key: {}", id, idempotencyKey);
+        log.info("Refunding order {} with key: {} (Dry Run: {})", id, idempotencyKey, dryRun);
 
-        Order order = orderService.refundOrder(id, request.getReason());
+        Order order = orderService.refundOrder(id, request.getReason(), dryRun);
         OrderResponse response = orderMapper.toResponse(order);
         return ResponseEntity.ok(response);
     }

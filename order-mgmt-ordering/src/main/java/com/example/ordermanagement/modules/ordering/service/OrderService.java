@@ -70,19 +70,21 @@ public class OrderService {
     }
 
     @CacheEvict(value = "orders", key = "#id")
-    public Order updateOrderStatus(Long id, OrderStatus newStatus, String reason) {
+    public Order updateOrderStatus(Long id, OrderStatus newStatus, String reason, boolean dryRun) {
         Order order = getOrder(id);
         OrderStatus oldStatus = order.getStatus();
 
         try {
             order.updateStatus(newStatus);
             if (reason != null && !reason.isBlank()) {
-               // Log reason or store it if Order entity has a field for generic status change reason
-               // Currently only cancellationReason exists.
-               // We will log it for now as per requirement "produce structured logs"
                log.info("Order {} status update reason: {}", id, reason);
             }
             
+            if (dryRun) {
+                log.info("[DRY RUN] Validated transition for order {}: {} → {}", id, oldStatus, newStatus);
+                return order; // Return validated object without saving
+            }
+
             Order updatedOrder = orderRepository.save(order);
 
             log.info("Order {}: {} → {}", id, oldStatus, newStatus);
@@ -158,7 +160,7 @@ public class OrderService {
     }
 
     @CacheEvict(value = "orders", key = "#id")
-    public Order refundOrder(Long id, String reason) {
+    public Order refundOrder(Long id, String reason, boolean dryRun) {
         Order order = getOrder(id);
         
         // Strict check: Refund only allowed for FAILED or CANCELLED
@@ -166,7 +168,7 @@ public class OrderService {
              throw new InvalidOrderStateException("Refund is allowed only when order is FAILED or CANCELLED. Current status: " + order.getStatus());
         }
 
-        return updateOrderStatus(id, OrderStatus.REFUNDED, reason);
+        return updateOrderStatus(id, OrderStatus.REFUNDED, reason, dryRun);
     }
 
     @CacheEvict(value = "orders", key = "#id")
