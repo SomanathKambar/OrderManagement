@@ -10,9 +10,10 @@
 - **Agent-Friendly Observability**:
     - Added `reasonCode` to `ErrorResponse`.
     - Updated `GlobalExceptionHandler` to populate machine-readable reason codes.
-- **Phase 2 Safety (Domain Testing)**:
+- **Phase 2 Safety (Domain & Contract Testing)**:
     - Implemented `OrderTest.java` to verify state machine integrity.
-    - Added `spring-boot-starter-test` to the `ordering` module pom.
+    - Added `spring-boot-starter-test` to the `ordering` and `delivery` module poms.
+    - Implemented `DeliveryOrderContractTest.java` to enforce cross-module integration safety between Ordering and Delivery modules.
 
 ## 3. API Enhancements
 - **OpenAPI/Swagger**: Updated `OpenApiConfig` to properly group APIs and fixed path mapping for delivery partners.

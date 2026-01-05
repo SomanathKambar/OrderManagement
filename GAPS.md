@@ -23,7 +23,7 @@ This document tracks the alignment of the **OrderManagement** project with the "
 
 ### Phase 2: Safety & Feedback Loops (The "Safe" Vibe) - 🟢 IN PROGRESS
 - [x] Target 90%+ Unit Test coverage for Domain Models (Order state machine verified).
-- [ ] Implement Contract Testing between modules.
+- [x] Implement Contract Testing between modules (Delivery -> Ordering verified).
 - [ ] Add "Dry Run" mode to state-changing APIs.
 
 ### Phase 3: Agentic Interfaces (The "Autonomous" Vibe)
