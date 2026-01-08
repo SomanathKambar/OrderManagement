@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class OrderEventKafkaConsumer {
 
-    @KafkaListener(topics = "orders.events", groupId = "order-management-group")
+    @KafkaListener(topics = "orders.events", groupId = "order-management-group", autoStartup = "false")
     public void consume(OrderEvent event) {
         log.info("Received Kafka Event: Type={}, ID={}, OrderID={}", 
                 event.getClass().getSimpleName(), event.eventId(), event.orderId());
